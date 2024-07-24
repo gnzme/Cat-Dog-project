@@ -1,0 +1,60 @@
+// Include necessary libraries
+#include <Servo.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Initialize the LCD
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Servo motor setup
+Servo servoMotor;
+
+// Messages for the LCD
+String servingFood = "SIRVIENDO COMIDA";
+String servingWater = "SIRVIENDO AGUA";
+String idleMessage = "CAT-DOG";
+
+void setup() {
+  // Initialize the LCD
+  lcd.init();
+  lcd.backlight();
+
+  // Attach the servo motor to pin 11 and set its initial position
+  servoMotor.attach(11);
+  servoMotor.write(0);
+
+  // Set pin modes for sensors and water pump
+  pinMode(2, INPUT);  // Food sensor
+  pinMode(7, INPUT);  // Water level sensor
+  pinMode(4, OUTPUT); // Water pump
+}
+
+void loop() {
+  // Check the water level sensor
+  if (digitalRead(7) == HIGH) {
+    digitalWrite(4, LOW); // Activate water pump
+    lcd.setCursor(0, 0);
+    lcd.print(servingWater);
+    delay(3000); // Keep the message for 3 seconds
+    lcd.clear();
+  } else {
+    digitalWrite(4, HIGH); // Deactivate water pump
+    lcd.setCursor(0, 0);
+    lcd.print(idleMessage);
+  }
+
+  // Check the food sensor
+  if (digitalRead(2) == LOW) {
+    servoMotor.write(0); // Keep servo motor at initial position
+    lcd.setCursor(0, 0);
+    lcd.print(idleMessage);
+  } else {
+    servoMotor.write(180); // Rotate servo motor to dispense food
+    delay(1500); // Wait for 1.5 seconds
+    lcd.setCursor(0, 0);
+    lcd.print(servingFood);
+    delay(3000); // Keep the message for 3 seconds
+    lcd.clear();
+    servoMotor.write(0); // Reset servo motor to initial position
+  }
+}
